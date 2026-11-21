@@ -8,6 +8,9 @@ const EnvSchema = z.object({
   LOG_LEVEL: z
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
+  // Reverse proxies between clients and the API. Rate limits take the client IP from this
+  // many hops back in X-Forwarded-For; a value that is too high lets clients spoof their IP.
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(1),
   SESSION_SECRET: z.string({ error: "is required" }).min(32, "must be at least 32 characters"),
   DATABASE_URL: z.string({ error: "is required" }),
   GEMINI_API_KEY: z.string({ error: "is required" }),
