@@ -24,7 +24,7 @@ type BusinessContextValue = {
   status: BusinessStatus;
   businesses: BusinessRecord[];
   activeBusiness: BusinessRecord | null;
-  saveSections: (patch: Partial<BusinessPassport>) => Promise<void>;
+  saveSections: (patch: Partial<BusinessPassport>) => Promise<string>;
 };
 
 const BusinessContext = createContext<BusinessContextValue | null>(null);
@@ -122,6 +122,7 @@ export function BusinessProvider({ children }: { children: ReactNode }) {
       const next = { userId, status: 'ready' as const, businesses, activeId };
       snapshotRef.current = next;
       setSnapshot(next);
+      return activeId;
     },
     [user?.id],
   );

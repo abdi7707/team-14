@@ -186,6 +186,13 @@ export const copy = {
     createAccount: ['Create account', 'መለያ ይፍጠሩ', 'Akkaawuntii uumaa'],
     logIn: ['Log in', 'ይግቡ', 'Seenaa'],
     skip: ['Skip for now', 'ለአሁን ይለፉ', 'Ammaaf darbaa'],
+    demo: ['Open the demo business', 'የማሳያ ንግድ ይክፈቱ', 'Daldala agarsiisaa banuu'],
+    demoHint: [
+      'Jimma Highland Coffee, a practice account until the API URL is set. One section is left open.',
+      'ጅማ ሃይላንድ ቡና፣ የልምምድ መለያ። አንድ ክፍል ክፍት ነው።',
+      "Jimma Highland Coffee, akkaawuntii qophii. Kutaan tokko banamee hafe.",
+    ],
+    demoError: ['Could not open the demo business. Try again.', 'የማሳያ ንግድ መክፈት አልተቻለም። እንደገና ይሞክሩ።', "Daldala agarsiisaa banuun hin dandeenye. Irra deebi'aa yaalaa."],
   },
   auth: {
     logIn: ['Log in', 'ይግቡ', 'Seenaa'],
