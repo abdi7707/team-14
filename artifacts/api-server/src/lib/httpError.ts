@@ -1,8 +1,10 @@
+import type { ErrorCode } from "@workspace/api-zod";
+
 export class HttpError extends Error {
   readonly status: number;
-  readonly code: string;
+  readonly code: ErrorCode;
 
-  constructor(status: number, code: string, message: string) {
+  constructor(status: number, code: ErrorCode, message: string) {
     super(message);
     this.name = "HttpError";
     this.status = status;
