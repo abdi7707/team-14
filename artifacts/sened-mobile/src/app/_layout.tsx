@@ -2,6 +2,7 @@ import { DefaultTheme, Stack, ThemeProvider, type ErrorBoundaryProps } from 'exp
 import { StatusBar } from 'expo-status-bar';
 
 import { ErrorFallback } from '@/components/error-fallback';
+import { AuthProvider } from '@/context/auth-context';
 import { Colors } from '@/constants/theme';
 
 export const unstable_settings = {
@@ -26,18 +27,20 @@ export function ErrorBoundary(props: ErrorBoundaryProps) {
 
 export default function RootLayout() {
   return (
-    <ThemeProvider value={navigationTheme}>
-      <Stack
-        screenOptions={{
-          headerTintColor: Colors.primary,
-          headerTitleStyle: { color: Colors.text },
-          headerShadowVisible: false,
-          headerBackButtonDisplayMode: 'minimal',
-          contentStyle: { backgroundColor: Colors.background },
-        }}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'SENED AI' }} />
-      </Stack>
-      <StatusBar style="dark" />
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={navigationTheme}>
+        <Stack
+          screenOptions={{
+            headerTintColor: Colors.primary,
+            headerTitleStyle: { color: Colors.text },
+            headerShadowVisible: false,
+            headerBackButtonDisplayMode: 'minimal',
+            contentStyle: { backgroundColor: Colors.background },
+          }}>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'SENED AI' }} />
+        </Stack>
+        <StatusBar style="dark" />
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

@@ -24,9 +24,13 @@ src/app/              expo-router screens
 src/components/       Screen, ThemedText, ThemedView, ErrorFallback, PlaceholderScreen
 src/components/ui/    Button, Card, Input, Badge, ProgressBar, EmptyState, ScreenHeader
 src/constants/        theme (colors, spacing, radius)
+src/context/          AuthProvider
 src/hooks/            useTheme
+src/lib/              API client, auth contract, storage keys
 ```
 
 Route groups have no layout of their own, so every non-tab screen is pushed on the root stack
-with a back button. Later tasks add `src/context/` (providers), `src/lib/` (engines, API client,
-i18n), and `src/types/` (domain types).
+with a back button. Later tasks add `src/types/` (domain types) and the passport and document modules.
+
+Leave `EXPO_PUBLIC_DOMAIN` empty in `.env` to use on-device practice accounts. Set it to the API
+origin, for example `http://192.168.1.20:3000`, once register, login, and me are available.
