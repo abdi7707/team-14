@@ -8,6 +8,9 @@ import { router } from "./routes";
 export function createApp() {
   const app = express();
   app.disable("x-powered-by");
+  // The hosting platform puts one proxy in front of the API; without this every
+  // request appears to come from the proxy and rate limits would be shared by all users.
+  app.set("trust proxy", 1);
 
   app.use(
     pinoHttp({
