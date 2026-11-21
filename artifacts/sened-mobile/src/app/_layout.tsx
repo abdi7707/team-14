@@ -4,6 +4,10 @@ import { StatusBar } from 'expo-status-bar';
 import { ErrorFallback } from '@/components/error-fallback';
 import { Colors } from '@/constants/theme';
 
+export const unstable_settings = {
+  anchor: '(tabs)',
+};
+
 const navigationTheme = {
   ...DefaultTheme,
   colors: {

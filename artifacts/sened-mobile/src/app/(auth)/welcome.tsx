@@ -31,7 +31,7 @@ export default function WelcomeScreen() {
       <View style={styles.actions}>
         <Button title="Create account" onPress={() => router.push('/register')} />
         <Button title="Log in" variant="outline" onPress={() => router.push('/login')} />
-        <Button title="Skip for now" variant="ghost" onPress={() => router.replace('/')} />
+        <Button title="Skip for now" variant="ghost" onPress={() => router.dismissTo('/')} />
       </View>
     </Screen>
   );
