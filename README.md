@@ -21,7 +21,7 @@ Requires Node.js 20.12 or newer and pnpm. The API lives in `artifacts/api-server
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
 
-3. Set `DATABASE_URL` in `.env` to a PostgreSQL connection string (a free hosted database such as Neon or Supabase works), then create the tables. The command is safe to run again; it only applies differences.
+3. Set `GEMINI_API_KEY` in `.env` to a key from [Google AI Studio](https://aistudio.google.com/apikey). Set `DATABASE_URL` to a PostgreSQL connection string (a free hosted database such as Neon or Supabase works), then create the tables. The command is safe to run again; it only applies differences.
 
    ```bash
    pnpm db:push
