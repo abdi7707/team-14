@@ -27,11 +27,19 @@ export default function TabsLayout() {
         tabBarActiveTintColor: theme.primary,
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
-        // react-native-web lets the label shrink and clip descenders without this.
+        // The label box is the exact width of the word, so the last letter is clipped.
         tabBarLabelStyle: {
           flexShrink: 0,
           fontSize: 11,
-          fontFamily: Platform.OS === 'web' ? 'system-ui, "Segoe UI", Ebrima, Nyala, sans-serif' : undefined,
+          fontWeight: '500',
+          paddingRight: 2,
+          overflow: 'visible',
+          fontFamily:
+            Platform.OS === 'web'
+              ? 'system-ui, "Segoe UI", Ebrima, Nyala, sans-serif'
+              : Platform.OS === 'android'
+                ? 'sans-serif'
+                : undefined,
         },
       }}>
       <Tabs.Screen

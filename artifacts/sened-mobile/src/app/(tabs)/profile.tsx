@@ -1,19 +1,17 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
+import { LanguageDropdown } from '@/components/language-dropdown';
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Badge, Button, Card, ScreenHeader } from '@/components/ui';
-import { Radius, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useI18n } from '@/context/i18n-context';
-import { useTheme } from '@/hooks/use-theme';
 import { copy } from '@/lib/i18n';
-import { LANGUAGE_CHOICES } from '@/types/document';
 
 export default function ProfileScreen() {
-  const theme = useTheme();
   const { t, language, setLanguage } = useI18n();
   const { status, user, logout } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
@@ -69,22 +67,7 @@ export default function ProfileScreen() {
       )}
 
       <Card>
-        <ThemedText type="defaultSemiBold">{t(copy.profile.language)}</ThemedText>
-        <View style={styles.languages}>
-          {LANGUAGE_CHOICES.map((choice) => {
-            const selected = language === choice.id;
-            return (
-              <Pressable
-                key={choice.id}
-                accessibilityRole="button"
-                accessibilityState={{ selected }}
-                onPress={() => void setLanguage(choice.id)}
-                style={[styles.language, { borderColor: selected ? theme.primary : theme.border }]}>
-                <ThemedText type="smallBold">{choice.label}</ThemedText>
-              </Pressable>
-            );
-          })}
-        </View>
+        <LanguageDropdown label={t(copy.profile.language)} value={language} onChange={(next) => void setLanguage(next)} />
         <ThemedText type="caption" themeColor="textSecondary">
           {t(copy.profile.languageHint)}
         </ThemedText>
@@ -98,13 +81,5 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   actions: {
     gap: Spacing.two,
-  },
-  languages: {
-    gap: Spacing.two,
-  },
-  language: {
-    borderWidth: 1,
-    borderRadius: Radius.md,
-    padding: Spacing.three,
   },
 });

@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { useAuth } from '@/context/auth-context';
+import { withSelectedDisclaimer } from '@/lib/draft-document';
 import { documentsKey } from '@/lib/storage-keys';
 import type { Language } from '@/lib/contracts';
 import type { SavedDocument } from '@/types/document';
@@ -41,7 +42,12 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
       try {
         const stored = await AsyncStorage.getItem(documentsKey(userId!));
         if (cancelled) return;
-        setSnapshot({ userId, status: 'ready', documents: parseDocuments(stored) });
+        const documents = parseDocuments(stored).map(selectDisclaimer);
+        setSnapshot({ userId, status: 'ready', documents });
+        const next = JSON.stringify(documents);
+        if (stored !== next && documents.length > 0) {
+          await AsyncStorage.setItem(documentsKey(userId!), next);
+        }
       } catch {
         if (!cancelled) setSnapshot({ userId, status: 'ready', documents: [] });
       }
@@ -67,7 +73,7 @@ export function DocumentProvider({ children }: { children: ReactNode }) {
     if (!userId || current.userId !== userId || current.status !== 'ready') {
       throw new Error('Sign in before saving a document.');
     }
-    const documents = [document, ...current.documents.filter((item) => item.id !== document.id)];
+    const documents = [selectDisclaimer(document), ...current.documents.filter((item) => item.id !== document.id)];
     await AsyncStorage.setItem(documentsKey(userId), JSON.stringify(documents));
     const next = { userId, status: 'ready' as const, documents };
     snapshotRef.current = next;
@@ -86,6 +92,16 @@ export function useDocuments() {
   const value = useContext(DocumentContext);
   if (!value) throw new Error('useDocuments must be used within DocumentProvider');
   return value;
+}
+
+function selectDisclaimer(document: SavedDocument): SavedDocument {
+  return {
+    ...document,
+    content: {
+      ...document.content,
+      sections: withSelectedDisclaimer(document.language, document.content.sections),
+    },
+  };
 }
 
 function parseDocuments(raw: string | null): SavedDocument[] {

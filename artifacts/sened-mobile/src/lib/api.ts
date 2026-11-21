@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { ApiError, type AuthResponse, type Language, type LoginBody, type RegisterBody, type User } from '@/lib/contracts';
-import { buildDraftContent } from '@/lib/draft-document';
+import { buildDraftContent, withSelectedDisclaimer } from '@/lib/draft-document';
 import { emailError, fullNameError, normalizeEmail, passwordError } from '@/lib/validation';
 import type { DocType, DocumentContent, GenerateDocumentBody, SavedDocument } from '@/types/document';
 
@@ -65,21 +65,43 @@ export async function generateDocument(body: GenerateDocumentBody): Promise<Save
   const createdAt = new Date().toISOString();
   if (isMockApi()) {
     await delay(400);
-    return {
-      id: `practice.${createId()}`,
-      docType: body.docType,
-      language: body.language,
-      status: 'READY',
-      content: buildDraftContent(body.docType, body.language, body.passport),
-      businessId: body.businessId,
-      createdAt,
-      source: 'practice',
-    };
+    return practiceDocument(body, createdAt);
   }
 
-  const payload = await request('/api/documents/generate', { method: 'POST', body, auth: true });
-  const document = parseGeneratedDocument(payload);
-  return { ...document, businessId: body.businessId, createdAt, source: 'api' };
+  try {
+    const payload = await request('/api/documents/generate', { method: 'POST', body, auth: true });
+    const document = parseGeneratedDocument(payload);
+    return {
+      ...document,
+      content: {
+        ...document.content,
+        sections: withSelectedDisclaimer(body.language, document.content.sections),
+      },
+      businessId: body.businessId,
+      createdAt,
+      source: 'api',
+    };
+  } catch (error) {
+    // The live tunnel answers health checks, then drops the generate request
+    // with a Cloudflare 502. A passport draft still lets the demo continue.
+    if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+      return practiceDocument(body, createdAt);
+    }
+    throw error;
+  }
+}
+
+function practiceDocument(body: GenerateDocumentBody, createdAt: string): SavedDocument {
+  return {
+    id: `practice.${createId()}`,
+    docType: body.docType,
+    language: body.language,
+    status: 'READY',
+    content: buildDraftContent(body.docType, body.language, body.passport),
+    businessId: body.businessId,
+    createdAt,
+    source: 'practice',
+  };
 }
 
 export async function fetchDocumentPdf(id: string): Promise<ArrayBuffer> {

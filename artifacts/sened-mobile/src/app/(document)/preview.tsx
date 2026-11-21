@@ -9,9 +9,7 @@ import { Badge, Button, Card, EmptyState } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useDocuments } from '@/context/document-context';
-import { ApiError } from '@/lib/contracts';
-import { fetchDocumentPdf } from '@/lib/api';
-import { documentHtml } from '@/lib/draft-document';
+import { documentHtml, withSelectedDisclaimer } from '@/lib/draft-document';
 import { savePdf } from '@/lib/save-pdf';
 import { languageLabel } from '@/types/document';
 
@@ -24,6 +22,7 @@ export default function PreviewDocumentScreen() {
   const [error, setError] = useState<string | null>(null);
   const loading = authStatus === 'loading' || (user !== null && status === 'loading');
   const document = documents.find((item) => item.id === documentId) ?? null;
+  const sections = document ? withSelectedDisclaimer(document.language, document.content.sections) : [];
 
   async function onSave() {
     if (!document || saving) return;
@@ -31,14 +30,9 @@ export default function PreviewDocumentScreen() {
     setError(null);
     const filename = `sened-loan-request-${document.language}.pdf`;
     try {
-      if (document.source === 'api') {
-        const bytes = await fetchDocumentPdf(document.id);
-        await savePdf({ filename, bytes });
-      } else {
-        await savePdf({ filename, html: documentHtml(document.content.title, document.content.sections) });
-      }
+      await savePdf({ filename, html: documentHtml(document.content.title, sections) });
     } catch (caught) {
-      setError(caught instanceof ApiError ? caught.message : 'Could not save the PDF. Try again.');
+      setError(caught instanceof Error ? caught.message : 'Could not save the PDF. Try again.');
     } finally {
       setSaving(false);
     }
@@ -64,7 +58,7 @@ export default function PreviewDocumentScreen() {
             <Badge label={languageLabel(document.language)} variant="neutral" />
           </View>
           <ThemedText type="title">{document.content.title}</ThemedText>
-          {document.content.sections.map((section) => (
+          {sections.map((section) => (
             <Card key={section.heading}>
               <ThemedText type="smallBold">{section.heading}</ThemedText>
               <ThemedText>{section.body}</ThemedText>
@@ -76,11 +70,9 @@ export default function PreviewDocumentScreen() {
             </ThemedText>
           ) : null}
           <Button title="Save as PDF" loading={saving} onPress={() => void onSave()} />
-          {document.source === 'practice' ? (
-            <ThemedText type="small" themeColor="textSecondary">
-              On web, choose Save as PDF in the print dialog. The letter uses only your passport.
-            </ThemedText>
-          ) : null}
+          <ThemedText type="small" themeColor="textSecondary">
+            On a phone, choose Save as PDF in the dialog that opens. On a computer, the file downloads.
+          </ThemedText>
         </>
       )}
     </Screen>

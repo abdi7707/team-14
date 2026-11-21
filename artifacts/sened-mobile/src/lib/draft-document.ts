@@ -4,11 +4,13 @@ import type { DocType, DocumentContent } from '@/types/document';
 
 const MISSING = '[to be confirmed]';
 
-const DISCLAIMER = [
-  'This is a draft for preparation. It is not an official document, and it does not promise loan approval.',
-  'ይህ ሰነድ ረቂቅ ብቻ ነው። ኦፊሴላዊ ሰነድ አይደለም። ብድር እንደሚሰጥ አያረጋግጥም።',
-  "Kun waraqaa qophaa'aa dha. Sanada seeraa miti. Liqii kennamuu hin waada'u.",
-].join('\n\n');
+const DISCLAIMER: Record<Language, string> = {
+  EN: 'This is a draft for preparation. It is not an official document, and it does not promise loan approval.',
+  AM: 'ይህ ሰነድ ረቂቅ ብቻ ነው። ኦፊሴላዊ ሰነድ አይደለም። ብድር እንደሚሰጥ አያረጋግጥም።',
+  OM: "Kun waraqaa qophaa'aa dha. Sanada seeraa miti. Liqii kennamuu hin waada'u.",
+};
+
+const DISCLAIMER_HEADINGS = new Set(['Disclaimer', 'ማስታወሻ', 'Hubachiisa']);
 
 type Copy = {
   title: string;
@@ -177,9 +179,31 @@ export function buildDraftContent(docType: DocType, language: Language, passport
           [copy.expiry, text(passport.legal.licenseExpiry)],
         ]),
       },
-      { heading: copy.disclaimer, body: DISCLAIMER },
+      { heading: copy.disclaimer, body: DISCLAIMER[language] },
     ],
   };
+}
+
+/** Keeps the closing disclaimer in the document language, including letters saved earlier with all three. */
+export function withSelectedDisclaimer(
+  language: Language,
+  sections: { heading: string; body: string }[],
+): { heading: string; body: string }[] {
+  const heading = COPY[language].disclaimer;
+  const body = DISCLAIMER[language];
+  let found = false;
+  const next = sections.map((section) => {
+    if (!isDisclaimerSection(section)) return section;
+    found = true;
+    return { heading, body };
+  });
+  return found ? next : [...next, { heading, body }];
+}
+
+function isDisclaimerSection(section: { heading: string; body: string }): boolean {
+  if (DISCLAIMER_HEADINGS.has(section.heading.trim())) return true;
+  const included = Object.values(DISCLAIMER).filter((text) => section.body.includes(text));
+  return included.length >= 2;
 }
 
 export function documentHtml(title: string, sections: { heading: string; body: string }[]): string {

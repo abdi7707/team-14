@@ -15,3 +15,7 @@ export function activeBusinessKey(userId: string): string {
 export function documentsKey(userId: string): string {
   return `@sened:docs:${userId}`;
 }
+
+export function uploadsKey(userId: string): string {
+  return `@sened:uploads:${userId}`;
+}

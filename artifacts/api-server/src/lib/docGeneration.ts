@@ -2,7 +2,7 @@ import { ApiError } from "@google/genai";
 import {
   DISCLAIMER_HEADINGS,
   DOCUMENT_TITLES,
-  DRAFT_DISCLAIMER,
+  DRAFT_DISCLAIMERS,
   type DocumentContent,
   type GenerateDocumentBody,
 } from "@workspace/api-zod";
@@ -106,7 +106,7 @@ export async function writeDocument(input: GenerateDocumentBody) {
         heading: clean(section.heading),
         body: clean(section.body),
       })),
-      { heading: DISCLAIMER_HEADINGS[input.language], body: DRAFT_DISCLAIMER },
+      { heading: DISCLAIMER_HEADINGS[input.language], body: DRAFT_DISCLAIMERS[input.language] },
     ],
   };
   return { content, replacedFigures };

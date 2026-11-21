@@ -1,29 +1,23 @@
+import * as Print from 'expo-print';
+
 import type { SavePdfInput } from '@/lib/save-pdf';
 
+/** Phone save. Opens the system print dialog, where Save as PDF is available. */
 export async function savePdf(input: SavePdfInput): Promise<void> {
-  const Sharing = await import('expo-sharing');
-  if (!(await Sharing.isAvailableAsync())) {
-    throw new Error('Saving a PDF is not available on this device.');
+  if (!input.html) throw new Error('Nothing to save.');
+  try {
+    await Print.printAsync({ html: input.html });
+  } catch (error) {
+    if (dismissed(error)) return;
+    const message = error instanceof Error ? error.message : '';
+    if (message && !message.includes('Requiring unknown module')) {
+      throw new Error(message);
+    }
+    throw new Error('Could not open the PDF. Close the app fully, open it again, then try Save as PDF.');
   }
+}
 
-  let uri: string;
-  if (input.bytes) {
-    const { File, Paths } = await import('expo-file-system');
-    const file = new File(Paths.cache, input.filename);
-    file.create({ overwrite: true });
-    await file.write(input.bytes);
-    uri = file.uri;
-  } else if (input.html) {
-    const Print = await import('expo-print');
-    const result = await Print.printToFileAsync({ html: input.html });
-    uri = result.uri;
-  } else {
-    throw new Error('Nothing to save.');
-  }
-
-  await Sharing.shareAsync(uri, {
-    mimeType: 'application/pdf',
-    UTI: 'com.adobe.pdf',
-    dialogTitle: 'Save PDF',
-  });
+function dismissed(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : '';
+  return /cancel|did not complete/i.test(message);
 }

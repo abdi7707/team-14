@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { NecessaryDocuments } from '@/components/necessary-documents';
 import { Screen } from '@/components/screen';
 import { LoadingNote, SignInPrompt } from '@/components/sign-in-prompt';
 import { ThemedText } from '@/components/themed-text';
@@ -25,17 +26,21 @@ export default function DocumentsScreen() {
         <LoadingNote message={t(copy.documents.checking)} />
       ) : !user ? (
         <SignInPrompt title={t(copy.documents.signInTitle)} message={t(copy.documents.letterPrompt)} />
-      ) : documents.length === 0 ? (
-        <EmptyState
-          icon={{ ios: 'doc.text.fill', android: 'description', web: 'description' }}
-          title={t(copy.documents.emptyTitle)}
-          message={t(copy.documents.letterPrompt)}
-          actionLabel={t(copy.documents.generate)}
-          onAction={() => router.push('/select')}
-        />
       ) : (
         <>
-          <Button title={t(copy.documents.generate)} onPress={() => router.push('/select')} />
+          <NecessaryDocuments />
+          <ThemedText type="subtitle">{t(copy.documents.lettersTitle)}</ThemedText>
+          {documents.length === 0 ? (
+            <EmptyState
+              icon={{ ios: 'doc.text.fill', android: 'description', web: 'description' }}
+              title={t(copy.documents.emptyTitle)}
+              message={t(copy.documents.letterPrompt)}
+              actionLabel={t(copy.documents.generate)}
+              onAction={() => router.push('/select')}
+            />
+          ) : (
+            <Button title={t(copy.documents.generate)} onPress={() => router.push('/select')} />
+          )}
           {documents.map((document) => (
             <Card key={document.id} onPress={() => router.push({ pathname: '/preview', params: { id: document.id } })}>
               <ThemedText type="smallBold">{document.content.title}</ThemedText>

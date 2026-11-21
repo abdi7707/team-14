@@ -2,6 +2,7 @@ import { router, Stack } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { LanguageDropdown } from '@/components/language-dropdown';
 import { Screen } from '@/components/screen';
 import { LoadingNote, SignInPrompt } from '@/components/sign-in-prompt';
 import { ThemedText } from '@/components/themed-text';
@@ -14,7 +15,7 @@ import { useI18n } from '@/context/i18n-context';
 import { ApiError, type Language } from '@/lib/contracts';
 import { generateDocument, isMockApi } from '@/lib/api';
 import { useTheme } from '@/hooks/use-theme';
-import { DOCUMENT_CHOICES, LANGUAGE_CHOICES, type DocType } from '@/types/document';
+import { DOCUMENT_CHOICES, type DocType } from '@/types/document';
 
 export default function SelectDocumentScreen() {
   const theme = useTheme();
@@ -91,22 +92,14 @@ export default function SelectDocumentScreen() {
               />
             ))}
           </View>
-          <View style={styles.group}>
-            <ThemedText type="smallBold">Language</ThemedText>
-            {LANGUAGE_CHOICES.map((choice) => (
-              <Choice
-                key={choice.id}
-                label={choice.label}
-                selected={language === choice.id}
-                onPress={() => {
-                  languagePicked.current = true;
-                  setLanguage(choice.id);
-                }}
-                borderColor={theme.border}
-                selectedColor={theme.primary}
-              />
-            ))}
-          </View>
+          <LanguageDropdown
+            label="Language"
+            value={language}
+            onChange={(next) => {
+              languagePicked.current = true;
+              setLanguage(next);
+            }}
+          />
           {error ? (
             <ThemedText type="small" themeColor="danger">
               {error}
