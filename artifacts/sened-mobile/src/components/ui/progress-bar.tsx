@@ -13,7 +13,7 @@ export type ProgressBarProps = {
 
 export function ProgressBar({ value, color = 'primary', height = 8, accessibilityLabel }: ProgressBarProps) {
   const theme = useTheme();
-  const percent = Math.round(Math.min(Math.max(value, 0), 100));
+  const percent = Number.isFinite(value) ? Math.round(Math.min(Math.max(value, 0), 100)) : 0;
 
   return (
     <View
