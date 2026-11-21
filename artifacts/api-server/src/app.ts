@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { pinoHttp } from "pino-http";
+import { env } from "./lib/env";
 import { logger } from "./lib/logger";
 import { errorHandler, notFound } from "./middlewares/errors";
 import { router } from "./routes";
@@ -8,9 +9,9 @@ import { router } from "./routes";
 export function createApp() {
   const app = express();
   app.disable("x-powered-by");
-  // The hosting platform puts one proxy in front of the API; without this every
-  // request appears to come from the proxy and rate limits would be shared by all users.
-  app.set("trust proxy", 1);
+  // Without this every request appears to come from the host's proxy, and all users
+  // would share one rate-limit bucket.
+  app.set("trust proxy", env.TRUST_PROXY_HOPS);
 
   app.use(
     pinoHttp({

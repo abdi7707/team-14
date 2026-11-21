@@ -55,12 +55,19 @@ The API is one Node.js process and runs on any host that supports Node.js 20.12+
 
 2. Create a web service from this repository with these settings:
 
-   - **Build command:** `pnpm install --frozen-lockfile --filter "@workspace/api-server..." && pnpm build:api` (installs only the API and the workspace packages it uses, not the mobile app)
-   - **Start command:** `pnpm start:api`
-   - **Health check path:** `/api/healthz`
-   - **Environment variables:** `DATABASE_URL`, `SESSION_SECRET`, `GEMINI_API_KEY`, and optionally `ADMIN_EMAILS`, `GEMINI_MODEL` and `LOG_LEVEL`. The host sets `PORT`.
+   - **Build command:**
 
-   The host must provide pnpm 12 (the `packageManager` field in `package.json`); on most hosts running `corepack enable` first is enough.
+     ```bash
+     npx --yes pnpm@12.21.0 install --frozen-lockfile --filter "@workspace/api-server..." && npx --yes pnpm@12.21.0 --filter @workspace/api-server run build
+     ```
+
+     This uses the pnpm version from the `packageManager` field whatever the host has installed, and installs only the API and the workspace packages it uses, not the mobile app.
+
+   - **Start command:** `node --enable-source-maps artifacts/api-server/dist/index.mjs` (what `pnpm start:api` runs, without needing pnpm at runtime)
+   - **Health check path:** `/api/healthz`
+   - **Environment variables:** `DATABASE_URL`, `SESSION_SECRET`, `GEMINI_API_KEY` and `TRUST_PROXY_HOPS`, and optionally `ADMIN_EMAILS`, `GEMINI_MODEL` and `LOG_LEVEL`. The host sets `PORT`.
+
+   On Render, also set `NODE_VERSION=24.15.0`, `SKIP_INSTALL_DEPS=true` (otherwise Render runs its own install before the build command) and `TRUST_PROXY_HOPS=3`.
 
 3. Open `https://<your-domain>/api/healthz` and check that it returns `{"status":"ok"}`.
 
