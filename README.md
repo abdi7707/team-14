@@ -47,6 +47,12 @@ The API is one Node.js process and runs on any host that supports Node.js 20.12+
    DATABASE_URL="postgres://..." pnpm db:push
    ```
 
+   In PowerShell, clear the variable afterwards so later commands in the same terminal don't use the production database:
+
+   ```powershell
+   $env:DATABASE_URL = "postgres://..."; pnpm db:push; Remove-Item Env:DATABASE_URL
+   ```
+
 2. Create a web service from this repository with these settings:
 
    - **Build command:** `pnpm install --frozen-lockfile --filter "@workspace/api-server..." && pnpm build:api` (installs only the API and the workspace packages it uses, not the mobile app)
