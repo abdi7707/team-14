@@ -1,18 +1,39 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { useColorScheme } from 'react-native';
+import { DefaultTheme, Stack, ThemeProvider, type ErrorBoundaryProps } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { ErrorFallback } from '@/components/error-fallback';
+import { Colors } from '@/constants/theme';
 
-SplashScreen.preventAutoHideAsync();
+const navigationTheme = {
+  ...DefaultTheme,
+  colors: {
+    ...DefaultTheme.colors,
+    primary: Colors.primary,
+    background: Colors.background,
+    card: Colors.surface,
+    text: Colors.text,
+    border: Colors.border,
+  },
+};
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export function ErrorBoundary(props: ErrorBoundaryProps) {
+  return <ErrorFallback {...props} />;
+}
+
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
+    <ThemeProvider value={navigationTheme}>
+      <Stack
+        screenOptions={{
+          headerTintColor: Colors.primary,
+          headerTitleStyle: { color: Colors.text },
+          headerShadowVisible: false,
+          headerBackButtonDisplayMode: 'minimal',
+          contentStyle: { backgroundColor: Colors.background },
+        }}>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'SENED AI' }} />
+      </Stack>
+      <StatusBar style="dark" />
     </ThemeProvider>
   );
 }
