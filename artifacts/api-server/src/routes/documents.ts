@@ -12,10 +12,11 @@ import { HttpError } from "../lib/httpError";
 import { renderDocumentPdf } from "../lib/pdf";
 import { parseBody } from "../lib/validation";
 import { requireAuth } from "../middlewares/auth";
+import { generationLimiter } from "../middlewares/rateLimits";
 
 export const documentsRouter = Router();
 
-documentsRouter.post("/documents/generate", requireAuth, async (req, res) => {
+documentsRouter.post("/documents/generate", requireAuth, generationLimiter, async (req, res) => {
   const body = parseBody(GenerateDocumentBody, req.body);
 
   const [row] = await db

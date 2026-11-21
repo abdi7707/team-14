@@ -13,6 +13,7 @@ import { env } from "../lib/env";
 import { HttpError } from "../lib/httpError";
 import { parseBody } from "../lib/validation";
 import { requireAuth } from "../middlewares/auth";
+import { authLimiter } from "../middlewares/rateLimits";
 
 export const authRouter = Router();
 
@@ -31,7 +32,7 @@ function authResponse(row: UserRow): AuthResponse {
   return { token: signToken(row.id), user: toUser(row) };
 }
 
-authRouter.post("/auth/register", async (req, res) => {
+authRouter.post("/auth/register", authLimiter, async (req, res) => {
   const body = parseBody(RegisterBody, req.body);
 
   const [user] = await db
@@ -51,7 +52,7 @@ authRouter.post("/auth/register", async (req, res) => {
   res.status(201).json(authResponse(user));
 });
 
-authRouter.post("/auth/login", async (req, res) => {
+authRouter.post("/auth/login", authLimiter, async (req, res) => {
   const body = parseBody(LoginBody, req.body);
 
   const user = await db.query.users.findFirst({ where: eq(users.email, body.email) });
