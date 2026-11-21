@@ -21,12 +21,18 @@ Requires Node.js 20.12 or newer and pnpm. The API lives in `artifacts/api-server
    node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
    ```
 
-3. Start the API on port 3000 (or `PORT`):
+3. Set `DATABASE_URL` in `.env` to a PostgreSQL connection string (a free hosted database such as Neon or Supabase works), then create the tables. The command is safe to run again; it only applies differences.
+
+   ```bash
+   pnpm db:push
+   ```
+
+4. Start the API on port 3000 (or `PORT`):
 
    ```bash
    pnpm dev:api
    ```
 
-4. Open <http://localhost:3000/api/healthz>. It should return `{"status":"ok"}`.
+5. Open <http://localhost:3000/api/healthz>. It should return `{"status":"ok"}`.
 
 Run `pnpm run typecheck` before opening a pull request.
