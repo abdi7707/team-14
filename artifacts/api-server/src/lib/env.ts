@@ -9,6 +9,17 @@ const EnvSchema = z.object({
     .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
     .default("info"),
   SESSION_SECRET: z.string({ error: "is required" }).min(32, "must be at least 32 characters"),
+  DATABASE_URL: z.string({ error: "is required" }),
+  // Comma-separated. Accounts registered with these emails get the admin role.
+  ADMIN_EMAILS: z
+    .string()
+    .default("")
+    .transform((value) =>
+      value
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    ),
 });
 
 export type Env = z.infer<typeof EnvSchema>;
