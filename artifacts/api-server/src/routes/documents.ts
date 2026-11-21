@@ -9,6 +9,7 @@ import { db } from "../lib/db";
 import { GenerationError, writeDocument } from "../lib/docGeneration";
 import { findReadyDocument } from "../lib/documentStore";
 import { HttpError } from "../lib/httpError";
+import { renderDocumentPdf } from "../lib/pdf";
 import { parseBody } from "../lib/validation";
 import { requireAuth } from "../middlewares/auth";
 
@@ -84,6 +85,14 @@ documentsRouter.get("/documents/mine", requireAuth, async (req, res) => {
     createdAt: row.createdAt.toISOString(),
   }));
   res.json(response);
+});
+
+documentsRouter.get<{ id: string }>("/documents/:id/pdf", requireAuth, async (req, res) => {
+  const row = await findReadyDocument(req.user!.id, req.params.id);
+  const pdf = await renderDocumentPdf(row.content);
+  const fileName = `sened-${row.docType.toLowerCase().replaceAll("_", "-")}-${row.language.toLowerCase()}.pdf`;
+
+  res.set("Cache-Control", "private, no-store").type("application/pdf").attachment(fileName).send(pdf);
 });
 
 documentsRouter.get<{ id: string }>("/documents/:id", requireAuth, async (req, res) => {
