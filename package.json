@@ -1,0 +1,12 @@
+{
+  "name": "sened-ai",
+  "private": true,
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @workspace/api-server run dev",
+    "typecheck": "pnpm -r --if-present run typecheck"
+  }
+}
