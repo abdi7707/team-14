@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
@@ -10,6 +10,7 @@ import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useBusiness } from '@/context/business-context';
 import { useDocuments } from '@/context/document-context';
+import { useI18n } from '@/context/i18n-context';
 import { ApiError, type Language } from '@/lib/contracts';
 import { generateDocument, isMockApi } from '@/lib/api';
 import { useTheme } from '@/hooks/use-theme';
@@ -20,10 +21,16 @@ export default function SelectDocumentScreen() {
   const { status: authStatus, user } = useAuth();
   const { status, activeBusiness } = useBusiness();
   const { remember } = useDocuments();
+  const { language: uiLanguage } = useI18n();
   const [docType, setDocType] = useState<DocType>('LOAN_REQUEST_LETTER');
-  const [language, setLanguage] = useState<Language>('EN');
+  const [language, setLanguage] = useState<Language>(uiLanguage);
+  const languagePicked = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    if (!languagePicked.current) setLanguage(uiLanguage);
+  }, [uiLanguage]);
+
   const loading = authStatus === 'loading' || (user !== null && status === 'loading');
   const businessName = activeBusiness?.passport.identity.businessName.trim() ?? '';
 
@@ -91,7 +98,10 @@ export default function SelectDocumentScreen() {
                 key={choice.id}
                 label={choice.label}
                 selected={language === choice.id}
-                onPress={() => setLanguage(choice.id)}
+                onPress={() => {
+                  languagePicked.current = true;
+                  setLanguage(choice.id);
+                }}
                 borderColor={theme.border}
                 selectedColor={theme.primary}
               />

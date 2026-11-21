@@ -1,4 +1,4 @@
-import { StyleSheet, Text, type TextProps } from 'react-native';
+import { Platform, StyleSheet, Text, type TextProps } from 'react-native';
 
 import type { ThemeColor } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -19,8 +19,9 @@ export type ThemedTextProps = TextProps & {
 export function ThemedText({ style, type = 'default', themeColor, ...rest }: ThemedTextProps) {
   const theme = useTheme();
   const color = theme[themeColor ?? (type === 'link' ? 'primary' : 'text')];
+  const fontFamily = Platform.OS === 'web' ? 'system-ui, "Segoe UI", Ebrima, Nyala, sans-serif' : undefined;
 
-  return <Text style={[{ color }, styles[type], style]} {...rest} />;
+  return <Text style={[{ color, fontFamily }, styles[type], style]} {...rest} />;
 }
 
 const styles = StyleSheet.create({
@@ -46,17 +47,17 @@ const styles = StyleSheet.create({
   },
   small: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
     fontWeight: 400,
   },
   smallBold: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
     fontWeight: 600,
   },
   caption: {
     fontSize: 12,
-    lineHeight: 16,
+    lineHeight: 18,
     fontWeight: 500,
   },
   link: {

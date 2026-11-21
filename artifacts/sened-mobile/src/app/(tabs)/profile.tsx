@@ -1,14 +1,20 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Badge, Button, Card, ScreenHeader } from '@/components/ui';
-import { Spacing } from '@/constants/theme';
+import { Radius, Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
+import { useI18n } from '@/context/i18n-context';
+import { useTheme } from '@/hooks/use-theme';
+import { copy } from '@/lib/i18n';
+import { LANGUAGE_CHOICES } from '@/types/document';
 
 export default function ProfileScreen() {
+  const theme = useTheme();
+  const { t, language, setLanguage } = useI18n();
   const { status, user, logout } = useAuth();
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -19,7 +25,7 @@ export default function ProfileScreen() {
     try {
       await logout();
     } catch {
-      setLogoutError('Could not log out. Please try again.');
+      setLogoutError(t(copy.profile.logoutError));
     } finally {
       setSigningOut(false);
     }
@@ -27,12 +33,12 @@ export default function ProfileScreen() {
 
   return (
     <Screen>
-      <ScreenHeader title="Profile" />
+      <ScreenHeader title={t(copy.profile.title)} />
 
       {status === 'loading' ? (
         <Card>
           <ThemedText type="small" themeColor="textSecondary">
-            Checking your account…
+            {t(copy.profile.checking)}
           </ThemedText>
         </Card>
       ) : status === 'signedIn' && user ? (
@@ -47,34 +53,44 @@ export default function ProfileScreen() {
               {logoutError}
             </ThemedText>
           ) : null}
-          <Button title="Log out" variant="outline" loading={signingOut} onPress={() => void onLogout()} />
+          <Button title={t(copy.profile.logOut)} variant="outline" loading={signingOut} onPress={() => void onLogout()} />
         </Card>
       ) : (
         <Card>
-          <ThemedText type="defaultSemiBold">You are not signed in</ThemedText>
+          <ThemedText type="defaultSemiBold">{t(copy.profile.signedOutTitle)}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
-            Sign in to generate documents and keep your account safe.
+            {t(copy.profile.signedOutMessage)}
           </ThemedText>
           <View style={styles.actions}>
-            <Button title="Log in" onPress={() => router.push('/login')} />
-            <Button title="Create account" variant="secondary" onPress={() => router.push('/register')} />
+            <Button title={t(copy.profile.logIn)} onPress={() => router.push('/login')} />
+            <Button title={t(copy.profile.createAccount)} variant="secondary" onPress={() => router.push('/register')} />
           </View>
         </Card>
       )}
 
       <Card>
-        <ThemedText type="defaultSemiBold">Language</ThemedText>
-        <View style={styles.badges}>
-          <Badge label="English" variant="primary" />
-          <Badge label="አማርኛ" />
-          <Badge label="Afaan Oromoo" />
+        <ThemedText type="defaultSemiBold">{t(copy.profile.language)}</ThemedText>
+        <View style={styles.languages}>
+          {LANGUAGE_CHOICES.map((choice) => {
+            const selected = language === choice.id;
+            return (
+              <Pressable
+                key={choice.id}
+                accessibilityRole="button"
+                accessibilityState={{ selected }}
+                onPress={() => void setLanguage(choice.id)}
+                style={[styles.language, { borderColor: selected ? theme.primary : theme.border }]}>
+                <ThemedText type="smallBold">{choice.label}</ThemedText>
+              </Pressable>
+            );
+          })}
         </View>
         <ThemedText type="caption" themeColor="textSecondary">
-          Language switching arrives with the multilingual update.
+          {t(copy.profile.languageHint)}
         </ThemedText>
       </Card>
 
-      <Button title="View welcome screen" variant="ghost" onPress={() => router.push('/welcome')} />
+      <Button title={t(copy.profile.welcome)} variant="ghost" onPress={() => router.push('/welcome')} />
     </Screen>
   );
 }
@@ -83,9 +99,12 @@ const styles = StyleSheet.create({
   actions: {
     gap: Spacing.two,
   },
-  badges: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+  languages: {
     gap: Spacing.two,
+  },
+  language: {
+    borderWidth: 1,
+    borderRadius: Radius.md,
+    padding: Spacing.three,
   },
 });

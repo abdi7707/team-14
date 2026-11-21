@@ -8,9 +8,12 @@ import { Badge, Button, Card, EmptyState, ProgressBar, ScreenHeader } from '@/co
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useBusiness } from '@/context/business-context';
-import { completenessLabel, overallCompleteness } from '@/lib/passport';
+import { useI18n } from '@/context/i18n-context';
+import { completenessPhrase, copy, fill } from '@/lib/i18n';
+import { overallCompleteness } from '@/lib/passport';
 
 export default function BusinessScreen() {
+  const { t } = useI18n();
   const { status: authStatus, user } = useAuth();
   const { status, activeBusiness } = useBusiness();
   const loading = authStatus === 'loading' || (user !== null && status === 'loading');
@@ -20,31 +23,27 @@ export default function BusinessScreen() {
 
   return (
     <Screen>
-      <ScreenHeader
-        title="Business"
-        subtitle="Your Business Passport is the single source of truth for every document and lender."
-      />
+      <ScreenHeader title={t(copy.tabs.business)} subtitle={t(copy.business.subtitle)} />
       {loading ? (
-        <ThemedText themeColor="textSecondary">Loading your passport…</ThemedText>
+        <ThemedText themeColor="textSecondary">{t(copy.business.loading)}</ThemedText>
       ) : !user ? (
-        <SignInPrompt
-          title="Sign in to see your business"
-          message="Each account keeps its own passport on this device."
-        />
+        <SignInPrompt title={t(copy.business.signInTitle)} message={t(copy.business.signInMessage)} />
       ) : !passport ? (
         <EmptyState
           icon={{ ios: 'storefront.fill', android: 'storefront', web: 'storefront' }}
-          title="No business yet"
-          message="Create your business to start filling in your Business Passport."
-          actionLabel="Create your business"
+          title={t(copy.business.emptyTitle)}
+          message={t(copy.business.emptyMessage)}
+          actionLabel={t(copy.business.emptyAction)}
           onAction={() => router.push('/business-basics')}
         />
       ) : (
         <Card>
           <View style={styles.row}>
-            <ThemedText type="defaultSemiBold">{passport.identity.businessName || 'Untitled business'}</ThemedText>
+            <ThemedText type="defaultSemiBold">
+              {passport.identity.businessName || t(copy.business.untitled)}
+            </ThemedText>
             <Badge
-              label={completenessLabel(percent)}
+              label={t(completenessPhrase(percent))}
               variant={percent >= 100 ? 'success' : percent > 0 ? 'warning' : 'neutral'}
             />
           </View>
@@ -60,9 +59,9 @@ export default function BusinessScreen() {
           ) : null}
           <ProgressBar value={percent} accessibilityLabel="Business Passport completeness" />
           <ThemedText type="small" themeColor="textSecondary">
-            {percent}% complete
+            {fill(t(copy.home.percentComplete), { percent })}
           </ThemedText>
-          <Button title="Open passport" onPress={() => router.push('/overview')} />
+          <Button title={t(copy.business.open)} onPress={() => router.push('/overview')} />
         </Card>
       )}
     </Screen>

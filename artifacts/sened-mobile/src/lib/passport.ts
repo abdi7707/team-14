@@ -143,12 +143,17 @@ export function completenessLabel(percentComplete: number): 'Not started' | 'In 
   return 'In progress';
 }
 
-export function nextBestAction(passport: BusinessPassport | null): NextAction {
-  if (!passport) return NEXT_ACTIONS.identity;
+export function nextActionId(passport: BusinessPassport | null): PassportSectionId | 'ready' {
+  if (!passport) return 'identity';
   for (const section of SECTION_ORDER) {
-    if (sectionCompleteness(passport, section) < 100) return NEXT_ACTIONS[section];
+    if (sectionCompleteness(passport, section) < 100) return section;
   }
-  return READY_ACTION;
+  return 'ready';
+}
+
+export function nextBestAction(passport: BusinessPassport | null): NextAction {
+  const id = nextActionId(passport);
+  return id === 'ready' ? READY_ACTION : NEXT_ACTIONS[id];
 }
 
 export function yearError(value: string): string | null {

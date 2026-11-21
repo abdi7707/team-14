@@ -5,10 +5,13 @@ import { Screen } from '@/components/screen';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui';
 import { Radius, Spacing } from '@/constants/theme';
+import { useI18n } from '@/context/i18n-context';
 import { useTheme } from '@/hooks/use-theme';
+import { copy } from '@/lib/i18n';
 
 export default function WelcomeScreen() {
   const theme = useTheme();
+  const { t } = useI18n();
 
   return (
     <Screen edges={['top', 'bottom']} scroll={false}>
@@ -24,14 +27,14 @@ export default function WelcomeScreen() {
           SENED AI
         </ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.centered}>
-          Prepare your business documents and financing applications in English, አማርኛ, or Afaan Oromoo.
+          {t(copy.welcome.subtitle)}
         </ThemedText>
       </View>
 
       <View style={styles.actions}>
-        <Button title="Create account" onPress={() => router.push('/register')} />
-        <Button title="Log in" variant="outline" onPress={() => router.push('/login')} />
-        <Button title="Skip for now" variant="ghost" onPress={() => router.dismissTo('/')} />
+        <Button title={t(copy.welcome.createAccount)} onPress={() => router.push('/register')} />
+        <Button title={t(copy.welcome.logIn)} variant="outline" onPress={() => router.push('/login')} />
+        <Button title={t(copy.welcome.skip)} variant="ghost" onPress={() => router.dismissTo('/')} />
       </View>
     </Screen>
   );

@@ -8,11 +8,13 @@ import { Badge, Button, Card, EmptyState, ProgressBar } from '@/components/ui';
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useBusiness } from '@/context/business-context';
-import { RESEARCH_NOTE } from '@/lib/institutions';
-import { formatAmountRange, runMatchingEngine, sectionHref, strengthLabel } from '@/lib/matching';
+import { useI18n } from '@/context/i18n-context';
+import { copy, fill, strengthPhrase } from '@/lib/i18n';
+import { formatAmountRange, runMatchingEngine, sectionHref } from '@/lib/matching';
 import type { FitStrength, RequirementCheck } from '@/types/financing';
 
 export default function ProductScreen() {
+  const { t } = useI18n();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const productId = Array.isArray(id) ? id[0] : id;
   const { status: authStatus, user } = useAuth();
@@ -23,14 +25,11 @@ export default function ProductScreen() {
 
   return (
     <Screen edges={['bottom']}>
-      <Stack.Screen options={{ title: 'Potential match' }} />
+      <Stack.Screen options={{ title: t(copy.financing.matchTitle) }} />
       {loading ? (
-        <LoadingNote message="Opening this product…" />
+        <LoadingNote message={t(copy.financing.checking)} />
       ) : !user ? (
-        <SignInPrompt
-          title="Sign in to see this product"
-          message="Preparation readiness is calculated from your Business Passport."
-        />
+        <SignInPrompt title={t(copy.financing.signInTitle)} message={t(copy.financing.signInMessage)} />
       ) : !match ? (
         <EmptyState
           icon={{ ios: 'building.columns.fill', android: 'account_balance', web: 'account_balance' }}
@@ -40,8 +39,11 @@ export default function ProductScreen() {
       ) : (
         <>
           <View style={styles.row}>
-            <Badge label={strengthLabel(match.fit.strength)} variant={strengthVariant(match.fit.strength)} />
-            <Badge label={match.institution.kind === 'bank' ? 'Bank' : 'Microfinance'} variant="neutral" />
+            <Badge label={t(strengthPhrase(match.fit.strength))} variant={strengthVariant(match.fit.strength)} />
+            <Badge
+              label={t(match.institution.kind === 'bank' ? copy.financing.bank : copy.financing.microfinance)}
+              variant="neutral"
+            />
           </View>
           <ThemedText type="title">{match.product.name}</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">
@@ -58,7 +60,7 @@ export default function ProductScreen() {
             ))}
           </Card>
           <Card>
-            <ThemedText type="smallBold">{match.readiness}% preparation readiness</ThemedText>
+            <ThemedText type="smallBold">{fill(t(copy.financing.readiness), { percent: match.readiness })}</ThemedText>
             <ProgressBar value={match.readiness} accessibilityLabel="Preparation readiness" />
             <ThemedText type="small" themeColor="textSecondary">
               {match.requirements.met.length} of {match.requirements.met.length + match.requirements.missing.length} sample
@@ -67,7 +69,7 @@ export default function ProductScreen() {
           </Card>
           {match.requirements.missing.length > 0 ? (
             <View style={styles.group}>
-              <ThemedText type="smallBold">Still needed</ThemedText>
+              <ThemedText type="smallBold">{t(copy.financing.stillNeeded)}</ThemedText>
               {match.requirements.missing.map((item) => (
                 <RequirementRow key={item.id} item={item} />
               ))}
@@ -75,14 +77,14 @@ export default function ProductScreen() {
           ) : null}
           {match.requirements.met.length > 0 ? (
             <View style={styles.group}>
-              <ThemedText type="smallBold">In the passport</ThemedText>
+              <ThemedText type="smallBold">{t(copy.financing.inPassport)}</ThemedText>
               {match.requirements.met.map((item) => (
                 <RequirementRow key={item.id} item={item} />
               ))}
             </View>
           ) : null}
           <ThemedText type="caption" themeColor="textSecondary">
-            {RESEARCH_NOTE} A potential match is not a loan decision.
+            {t(copy.financing.researchNote)} {t(copy.financing.notADecision)}
           </ThemedText>
         </>
       )}
@@ -91,11 +93,15 @@ export default function ProductScreen() {
 }
 
 function RequirementRow({ item }: { item: RequirementCheck }) {
+  const { t } = useI18n();
   return (
     <Card>
       <View style={styles.row}>
         <ThemedText type="smallBold">{item.label}</ThemedText>
-        <Badge label={item.met ? 'In passport' : 'Still needed'} variant={item.met ? 'success' : 'warning'} />
+        <Badge
+          label={t(item.met ? copy.financing.inPassport : copy.financing.stillNeeded)}
+          variant={item.met ? 'success' : 'warning'}
+        />
       </View>
       <ThemedText type="caption" themeColor="textSecondary">
         {item.researchTag} · {item.reliability}
@@ -104,7 +110,11 @@ function RequirementRow({ item }: { item: RequirementCheck }) {
         {item.source}
       </ThemedText>
       {item.met ? null : (
-        <Button title="Add to passport" variant="secondary" onPress={() => router.push(sectionHref(item.section))} />
+        <Button
+          title={t(copy.financing.addToPassport)}
+          variant="secondary"
+          onPress={() => router.push(sectionHref(item.section))}
+        />
       )}
     </Card>
   );

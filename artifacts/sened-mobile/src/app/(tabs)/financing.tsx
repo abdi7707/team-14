@@ -8,10 +8,12 @@ import { ThemedText } from '@/components/themed-text';
 import { Button, Card, EmptyState, ProgressBar, ScreenHeader } from '@/components/ui';
 import { useAuth } from '@/context/auth-context';
 import { useBusiness } from '@/context/business-context';
-import { RESEARCH_NOTE } from '@/lib/institutions';
+import { useI18n } from '@/context/i18n-context';
+import { copy, fill } from '@/lib/i18n';
 import { averageReadiness, runMatchingEngine } from '@/lib/matching';
 
 export default function FinancingScreen() {
+  const { t } = useI18n();
   const { status: authStatus, user } = useAuth();
   const { status, activeBusiness } = useBusiness();
   const loading = authStatus === 'loading' || (user !== null && status === 'loading');
@@ -22,38 +24,35 @@ export default function FinancingScreen() {
 
   return (
     <Screen>
-      <ScreenHeader title="Financing" subtitle="See potential matches and your preparation readiness." />
+      <ScreenHeader title={t(copy.tabs.financing)} subtitle={t(copy.financing.subtitle)} />
       {loading ? (
-        <LoadingNote message="Checking your passport…" />
+        <LoadingNote message={t(copy.financing.checking)} />
       ) : !user ? (
-        <SignInPrompt
-          title="Sign in to see potential matches"
-          message="Preparation readiness is calculated from your Business Passport."
-        />
+        <SignInPrompt title={t(copy.financing.signInTitle)} message={t(copy.financing.signInMessage)} />
       ) : !passport ? (
         <EmptyState
           icon={{ ios: 'building.columns.fill', android: 'account_balance', web: 'account_balance' }}
-          title="Add your business first"
-          message="Potential matches are calculated from your Business Passport."
-          actionLabel="Add business basics"
+          title={t(copy.financing.emptyTitle)}
+          message={t(copy.financing.emptyMessage)}
+          actionLabel={t(copy.financing.emptyAction)}
           onAction={() => router.push('/business-basics')}
         />
       ) : (
         <>
           <Card>
-            <ThemedText type="defaultSemiBold">{businessName || 'Untitled business'}</ThemedText>
-            <ProgressBar value={readiness} accessibilityLabel="Preparation readiness" />
-            <ThemedText type="small">{readiness}% preparation readiness</ThemedText>
+            <ThemedText type="defaultSemiBold">{businessName || t(copy.business.untitled)}</ThemedText>
+            <ProgressBar value={readiness} accessibilityLabel={t(copy.financing.readiness)} />
+            <ThemedText type="small">{fill(t(copy.financing.readiness), { percent: readiness })}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
-              Averaged across the sample products. Missing facts, such as a TIN or a license, lower it.
+              {t(copy.financing.averageNote)}
             </ThemedText>
           </Card>
           {matches.slice(0, 3).map((match) => (
             <PotentialMatchCard key={match.product.id} match={match} />
           ))}
-          <Button title="See potential matches" onPress={() => router.push('/matches')} />
+          <Button title={t(copy.financing.seeMatches)} onPress={() => router.push('/matches')} />
           <ThemedText type="caption" themeColor="textSecondary" style={styles.note}>
-            {RESEARCH_NOTE} SENED shows potential matches and preparation readiness. It never promises loan approval.
+            {t(copy.financing.researchNote)} {t(copy.financing.trustNote)}
           </ThemedText>
         </>
       )}

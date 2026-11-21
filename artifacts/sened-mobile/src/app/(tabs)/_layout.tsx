@@ -1,8 +1,10 @@
 import { Tabs } from 'expo-router/js-tabs';
 import { SymbolView, type SymbolViewProps } from 'expo-symbols';
-import type { ColorValue } from 'react-native';
+import { Platform, type ColorValue } from 'react-native';
 
+import { useI18n } from '@/context/i18n-context';
 import { useTheme } from '@/hooks/use-theme';
+import { copy } from '@/lib/i18n';
 
 type TabIconProps = {
   name: SymbolViewProps['name'];
@@ -16,6 +18,7 @@ function TabIcon({ name, color, size }: TabIconProps) {
 
 export default function TabsLayout() {
   const theme = useTheme();
+  const { t } = useI18n();
 
   return (
     <Tabs
@@ -25,12 +28,16 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: theme.textSecondary,
         tabBarStyle: { backgroundColor: theme.surface, borderTopColor: theme.border },
         // react-native-web lets the label shrink and clip descenders without this.
-        tabBarLabelStyle: { flexShrink: 0 },
+        tabBarLabelStyle: {
+          flexShrink: 0,
+          fontSize: 11,
+          fontFamily: Platform.OS === 'web' ? 'system-ui, "Segoe UI", Ebrima, Nyala, sans-serif' : undefined,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: t(copy.tabs.home),
           tabBarIcon: ({ color, size }) => (
             <TabIcon name={{ ios: 'house.fill', android: 'home', web: 'home' }} color={color} size={size} />
           ),
@@ -39,7 +46,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="business"
         options={{
-          title: 'Business',
+          title: t(copy.tabs.business),
           tabBarIcon: ({ color, size }) => (
             <TabIcon
               name={{ ios: 'storefront.fill', android: 'storefront', web: 'storefront' }}
@@ -52,7 +59,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="documents"
         options={{
-          title: 'Documents',
+          title: t(copy.tabs.documents),
           tabBarIcon: ({ color, size }) => (
             <TabIcon
               name={{ ios: 'doc.text.fill', android: 'description', web: 'description' }}
@@ -65,7 +72,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="financing"
         options={{
-          title: 'Financing',
+          title: t(copy.tabs.financing),
           tabBarIcon: ({ color, size }) => (
             <TabIcon
               name={{ ios: 'building.columns.fill', android: 'account_balance', web: 'account_balance' }}
@@ -78,7 +85,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: 'Profile',
+          title: t(copy.tabs.profile),
           tabBarIcon: ({ color, size }) => (
             <TabIcon
               name={{ ios: 'person.crop.circle.fill', android: 'account_circle', web: 'account_circle' }}
