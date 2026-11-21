@@ -4,3 +4,5 @@ packages:
 
 allowBuilds:
   esbuild: true
+  # Its postinstall only prints a version-scheme warning; nothing is built.
+  protobufjs: false
