@@ -49,7 +49,7 @@ The API is one Node.js process and runs on any host that supports Node.js 20.12+
 
 2. Create a web service from this repository with these settings:
 
-   - **Build command:** `pnpm install --frozen-lockfile && pnpm build:api`
+   - **Build command:** `pnpm install --frozen-lockfile --filter "@workspace/api-server..." && pnpm build:api` (installs only the API and the workspace packages it uses, not the mobile app)
    - **Start command:** `pnpm start:api`
    - **Health check path:** `/api/healthz`
    - **Environment variables:** `DATABASE_URL`, `SESSION_SECRET`, `GEMINI_API_KEY`, and optionally `ADMIN_EMAILS`, `GEMINI_MODEL` and `LOG_LEVEL`. The host sets `PORT`.
