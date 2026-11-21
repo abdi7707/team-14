@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import { ApiError, type AuthResponse, type LoginBody, type RegisterBody, type User } from '@/lib/contracts';
+import { ApiError, type AuthResponse, type Language, type LoginBody, type RegisterBody, type User } from '@/lib/contracts';
+import { buildDraftContent } from '@/lib/draft-document';
 import { emailError, fullNameError, normalizeEmail, passwordError } from '@/lib/validation';
+import type { DocType, DocumentContent, GenerateDocumentBody, SavedDocument } from '@/types/document';
 
 const MOCK_ACCOUNTS_KEY = '@sened:mock_accounts';
 
@@ -57,6 +59,50 @@ export async function login(body: LoginBody): Promise<AuthResponse> {
 export async function me(): Promise<User> {
   const payload = await request('/api/auth/me', { method: 'GET', auth: true });
   return parseMe(payload);
+}
+
+export async function generateDocument(body: GenerateDocumentBody): Promise<SavedDocument> {
+  const createdAt = new Date().toISOString();
+  if (isMockApi()) {
+    await delay(400);
+    return {
+      id: `practice.${createId()}`,
+      docType: body.docType,
+      language: body.language,
+      status: 'READY',
+      content: buildDraftContent(body.docType, body.language, body.passport),
+      businessId: body.businessId,
+      createdAt,
+      source: 'practice',
+    };
+  }
+
+  const payload = await request('/api/documents/generate', { method: 'POST', body, auth: true });
+  const document = parseGeneratedDocument(payload);
+  return { ...document, businessId: body.businessId, createdAt, source: 'api' };
+}
+
+export async function fetchDocumentPdf(id: string): Promise<ArrayBuffer> {
+  const origin = apiOrigin();
+  if (!origin) throw new ApiError(0, 'PDF download needs the SENED API.');
+  if (!currentToken) throw new ApiError(401, 'You are not signed in.');
+
+  let response: Response;
+  try {
+    response = await fetch(`${origin}/api/documents/${encodeURIComponent(id)}/pdf`, {
+      headers: { Accept: 'application/pdf', Authorization: `Bearer ${currentToken}` },
+    });
+  } catch {
+    throw new ApiError(0, 'Could not reach the SENED API. Check your connection and try again.');
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    const payload = text ? safeJson(text) : null;
+    const fallback = response.status === 401 ? 'You are not signed in.' : 'Could not download the PDF.';
+    throw new ApiError(response.status, textMessage(payload, fallback));
+  }
+  return response.arrayBuffer();
 }
 
 type RequestOptions = {
@@ -229,6 +275,80 @@ function isMockAccount(value: unknown): value is MockAccount {
 
 async function writeMockAccounts(accounts: MockAccount[]) {
   await AsyncStorage.setItem(MOCK_ACCOUNTS_KEY, JSON.stringify(accounts));
+}
+
+function parseGeneratedDocument(value: unknown): GeneratedDocumentFields {
+  if (!value || typeof value !== 'object') {
+    throw new ApiError(500, 'The server returned an unexpected response.');
+  }
+  const body = value as Record<string, unknown>;
+  const id = typeof body.id === 'string' ? body.id.trim() : '';
+  const docType = body.docType ?? body.doc_type;
+  const language = body.language;
+  const status = body.status;
+  if (!id || !isDocType(docType) || !isLanguage(language) || !isDocumentStatus(status)) {
+    throw new ApiError(500, 'The server returned an unexpected response.');
+  }
+  return { id, docType, language, status, content: parseDocumentContent(body.content) };
+}
+
+type GeneratedDocumentFields = {
+  id: string;
+  docType: DocType;
+  language: Language;
+  status: 'GENERATING' | 'READY' | 'FAILED';
+  content: DocumentContent;
+};
+
+function parseDocumentContent(value: unknown): DocumentContent {
+  if (!value || typeof value !== 'object') {
+    throw new ApiError(500, 'The server returned an unexpected response.');
+  }
+  const content = value as Record<string, unknown>;
+  const title = typeof content.title === 'string' ? content.title.trim() : '';
+  if (!title || !Array.isArray(content.sections)) {
+    throw new ApiError(500, 'The server returned an unexpected response.');
+  }
+  const sections = content.sections.map((section) => {
+    if (!section || typeof section !== 'object') {
+      throw new ApiError(500, 'The server returned an unexpected response.');
+    }
+    const row = section as Record<string, unknown>;
+    if (typeof row.heading !== 'string' || typeof row.body !== 'string') {
+      throw new ApiError(500, 'The server returned an unexpected response.');
+    }
+    return { heading: row.heading, body: row.body };
+  });
+  return { title, sections };
+}
+
+function isDocType(value: unknown): value is DocType {
+  return value === 'LOAN_REQUEST_LETTER';
+}
+
+function isLanguage(value: unknown): value is Language {
+  return value === 'EN' || value === 'AM' || value === 'OM';
+}
+
+function isDocumentStatus(value: unknown): value is 'GENERATING' | 'READY' | 'FAILED' {
+  return value === 'GENERATING' || value === 'READY' || value === 'FAILED';
+}
+
+function safeJson(text: string): unknown {
+  try {
+    return JSON.parse(text) as unknown;
+  } catch {
+    return null;
+  }
+}
+
+function textMessage(payload: unknown, fallback: string): string {
+  if (payload && typeof payload === 'object') {
+    const body = payload as Record<string, unknown>;
+    if (typeof body.message === 'string' && body.message.trim()) return body.message.trim();
+    if (typeof body.error === 'string' && body.error.trim()) return body.error.trim();
+  }
+  return fallback;
 }
 
 function createId(): string {

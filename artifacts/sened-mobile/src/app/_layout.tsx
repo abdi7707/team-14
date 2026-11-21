@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { ErrorFallback } from '@/components/error-fallback';
 import { AuthProvider } from '@/context/auth-context';
 import { BusinessProvider } from '@/context/business-context';
+import { DocumentProvider } from '@/context/document-context';
 import { Colors } from '@/constants/theme';
 
 export const unstable_settings = {
@@ -30,19 +31,21 @@ export default function RootLayout() {
   return (
     <AuthProvider>
       <BusinessProvider>
-        <ThemeProvider value={navigationTheme}>
-          <Stack
-            screenOptions={{
-              headerTintColor: Colors.primary,
-              headerTitleStyle: { color: Colors.text },
-              headerShadowVisible: false,
-              headerBackButtonDisplayMode: 'minimal',
-              contentStyle: { backgroundColor: Colors.background },
-            }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'SENED AI' }} />
-          </Stack>
-          <StatusBar style="dark" />
-        </ThemeProvider>
+        <DocumentProvider>
+          <ThemeProvider value={navigationTheme}>
+            <Stack
+              screenOptions={{
+                headerTintColor: Colors.primary,
+                headerTitleStyle: { color: Colors.text },
+                headerShadowVisible: false,
+                headerBackButtonDisplayMode: 'minimal',
+                contentStyle: { backgroundColor: Colors.background },
+              }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'SENED AI' }} />
+            </Stack>
+            <StatusBar style="dark" />
+          </ThemeProvider>
+        </DocumentProvider>
       </BusinessProvider>
     </AuthProvider>
   );

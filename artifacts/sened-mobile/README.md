@@ -20,18 +20,19 @@ src/app/              expo-router screens
   (onboarding)/       business-basics, goal
   (passport)/         overview, identity, location, legal, operations, financial
   (financing)/        matches
-  (document)/         select
+  (document)/         select, preview
 src/components/       Screen, ThemedText, ThemedView, ErrorFallback, PlaceholderScreen
 src/components/ui/    Button, Card, Input, Badge, ProgressBar, EmptyState, ScreenHeader
 src/constants/        theme (colors, spacing, radius)
-src/context/          AuthProvider, BusinessProvider
+src/context/          AuthProvider, BusinessProvider, DocumentProvider
 src/hooks/            useTheme
-src/lib/              API client, passport completeness, storage keys
-src/types/            BusinessPassport
+src/lib/              API client, passport completeness, draft letter, storage keys
+src/types/            BusinessPassport, document contract
 ```
 
 Route groups have no layout of their own, so every non-tab screen is pushed on the root stack
 with a back button. The passport is stored on the device per account (`@sened:businesses:<userId>`).
+Drafts are stored the same way (`@sened:docs:<userId>`).
 
 Leave `EXPO_PUBLIC_DOMAIN` empty in `.env` to use on-device practice accounts. Set it to the API
 origin, for example `http://192.168.1.20:3000`, once register, login, and me are available.

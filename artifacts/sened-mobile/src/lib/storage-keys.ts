@@ -10,3 +10,7 @@ export function businessesKey(userId: string): string {
 export function activeBusinessKey(userId: string): string {
   return `@sened:active_business:${userId}`;
 }
+
+export function documentsKey(userId: string): string {
+  return `@sened:docs:${userId}`;
+}
