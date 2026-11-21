@@ -35,4 +35,27 @@ Requires Node.js 20.12 or newer and pnpm. The API lives in `artifacts/api-server
 
 5. Open <http://localhost:3000/api/healthz>. It should return `{"status":"ok"}`.
 
-Run `pnpm run typecheck` before opening a pull request.
+Run `pnpm run typecheck` before opening a pull request. The API contract is in [docs/api-contracts.md](docs/api-contracts.md).
+
+## Deploy the API
+
+The API is one Node.js process and runs on any host that supports Node.js 20.12+ and pnpm, such as Render, Railway or Fly.io. Production runs a single bundled file, `artifacts/api-server/dist/index.mjs`, built with esbuild.
+
+1. Create a PostgreSQL database (Neon and Supabase have free tiers) and create the tables once from your laptop. Put the production `DATABASE_URL` in your shell for this command only, never in a committed file:
+
+   ```bash
+   DATABASE_URL="postgres://..." pnpm db:push
+   ```
+
+2. Create a web service from this repository with these settings:
+
+   - **Build command:** `pnpm install --frozen-lockfile && pnpm build:api`
+   - **Start command:** `pnpm start:api`
+   - **Health check path:** `/api/healthz`
+   - **Environment variables:** `DATABASE_URL`, `SESSION_SECRET`, `GEMINI_API_KEY`, and optionally `ADMIN_EMAILS`, `GEMINI_MODEL` and `LOG_LEVEL`. The host sets `PORT`.
+
+   The host must provide pnpm 12 (the `packageManager` field in `package.json`); on most hosts running `corepack enable` first is enough.
+
+3. Open `https://<your-domain>/api/healthz` and check that it returns `{"status":"ok"}`.
+
+4. Point the mobile app at the API by setting `EXPO_PUBLIC_DOMAIN=https://<your-domain>`. Include `https://`: without a protocol the app falls back to plain `http://`.
