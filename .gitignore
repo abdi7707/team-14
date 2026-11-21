@@ -1,0 +1,17 @@
+node_modules/
+.env
+.env.*
+!.env.example
+dist/
+build/
+web-build/
+.expo/
+coverage/
+*.tsbuildinfo
+.DS_Store
+*.log
+
+# Reference documents from another team (do not commit)
+git-workflow.md
+VoiceSOS_team_assignments_3week.md
+task (4).md
