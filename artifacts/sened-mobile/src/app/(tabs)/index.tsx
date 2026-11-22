@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Screen } from '@/components/screen';
@@ -7,14 +8,18 @@ import { Badge, Button, Card, ProgressBar, ScreenHeader } from '@/components/ui'
 import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/auth-context';
 import { useBusiness } from '@/context/business-context';
+import { useDocuments } from '@/context/document-context';
 import { useI18n } from '@/context/i18n-context';
+import { checkChapaPayment } from '@/lib/api';
 import { completenessPhrase, copy, fill, nextActionCopy, terms } from '@/lib/i18n';
 import { nextActionId, overallCompleteness } from '@/lib/passport';
+import { isPaymentConfirmed } from '@/types/document';
 
 export default function HomeScreen() {
   const { t } = useI18n();
   const { status: authStatus, user } = useAuth();
   const { status, activeBusiness } = useBusiness();
+  useConfirmPaidDrafts();
   const loading = authStatus === 'loading' || (user !== null && status === 'loading');
   const passport = user ? (activeBusiness?.passport ?? null) : null;
   const percent = overallCompleteness(passport);
@@ -54,6 +59,39 @@ export default function HomeScreen() {
       )}
     </Screen>
   );
+}
+
+function useConfirmPaidDrafts() {
+  const { documents, remember } = useDocuments();
+  const started = useRef(new Set<string>());
+
+  useEffect(() => {
+    for (const document of documents) {
+      const payment = document.payment;
+      if (!payment || payment.status !== 'PENDING' || isPaymentConfirmed(document)) continue;
+      if (started.current.has(payment.transactionId)) continue;
+      started.current.add(payment.transactionId);
+      void checkChapaPayment(payment.transactionId)
+        .then(async (result) => {
+          if (result.status === 'PENDING') {
+            started.current.delete(payment.transactionId);
+            return;
+          }
+          await remember({
+            ...document,
+            paid: result.status === 'CONFIRMED',
+            payment: {
+              ...payment,
+              status: result.status,
+              rejectionReason: result.status === 'REJECTED' ? 'chapa' : undefined,
+            },
+          });
+        })
+        .catch(() => {
+          started.current.delete(payment.transactionId);
+        });
+    }
+  }, [documents, remember]);
 }
 
 function badgeVariant(percent: number, loading: boolean): 'neutral' | 'warning' | 'success' | 'info' {

@@ -130,7 +130,21 @@ function isSavedDocument(value: unknown): value is SavedDocument {
     Array.isArray(sections) &&
     typeof body.businessId === 'string' &&
     typeof body.createdAt === 'string' &&
-    (body.source === 'practice' || body.source === 'api')
+    (body.source === 'practice' || body.source === 'api') &&
+    (body.paid === undefined || typeof body.paid === 'boolean') &&
+    (body.payment === undefined || isDocumentPayment(body.payment)) &&
+    (body.highlightVariant === undefined || typeof body.highlightVariant === 'number')
+  );
+}
+
+function isDocumentPayment(value: unknown): boolean {
+  if (!value || typeof value !== 'object') return false;
+  const payment = value as Record<string, unknown>;
+  return (
+    typeof payment.transactionId === 'string' &&
+    (payment.status === 'PENDING' || payment.status === 'CONFIRMED' || payment.status === 'REJECTED') &&
+    typeof payment.submittedAt === 'string' &&
+    (payment.rejectionReason === undefined || typeof payment.rejectionReason === 'string')
   );
 }
 

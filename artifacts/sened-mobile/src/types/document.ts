@@ -30,11 +30,37 @@ export type GeneratedDocument = {
   content: DocumentContent;
 };
 
+export type PaymentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED';
+
+/** A Chapa payment for this draft. The phone cannot confirm it. */
+export type DocumentPayment = {
+  transactionId: string;
+  status: PaymentStatus;
+  submittedAt: string;
+  rejectionReason?: string;
+};
+
 export type SavedDocument = GeneratedDocument & {
   businessId: string;
   createdAt: string;
   source: 'practice' | 'api';
+  /** The full draft can be downloaded only after payment is confirmed. */
+  paid?: boolean;
+  /** Chapa checkout. Pending and rejected payments keep the draft locked. */
+  payment?: DocumentPayment;
+  /** Which SENED reading to show. Regenerate advances it so the highlight changes. */
+  highlightVariant?: number;
 };
+
+/** Confirmed payments unlock the draft. A pending or rejected payment stays locked. */
+export function isPaymentConfirmed(document: { paid?: boolean; payment?: DocumentPayment }): boolean {
+  if (document.payment?.status === 'PENDING' || document.payment?.status === 'REJECTED') return false;
+  if (document.payment?.status === 'CONFIRMED') return true;
+  return document.paid === true;
+}
+
+/** Loan Request Letter price from the product catalog. */
+export const LOAN_LETTER_PRICE_ETB = 149;
 
 export const DOCUMENT_CHOICES: { id: DocType; title: string; description: string }[] = [
   {

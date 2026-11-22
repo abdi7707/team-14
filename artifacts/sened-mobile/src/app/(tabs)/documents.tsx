@@ -11,7 +11,7 @@ import { useAuth } from '@/context/auth-context';
 import { useDocuments } from '@/context/document-context';
 import { useI18n } from '@/context/i18n-context';
 import { copy } from '@/lib/i18n';
-import { languageLabel } from '@/types/document';
+import { isPaymentConfirmed, languageLabel, type SavedDocument } from '@/types/document';
 
 export default function DocumentsScreen() {
   const { t } = useI18n();
@@ -45,6 +45,7 @@ export default function DocumentsScreen() {
             <Card key={document.id} onPress={() => router.push({ pathname: '/preview', params: { id: document.id } })}>
               <ThemedText type="smallBold">{document.content.title}</ThemedText>
               <View style={styles.meta}>
+                <Badge label={t(letterBadge(document).label)} variant={letterBadge(document).variant} />
                 <Badge label={languageLabel(document.language)} variant="neutral" />
                 <ThemedText type="small" themeColor="textSecondary">
                   {formatDate(document.createdAt)}
@@ -56,6 +57,16 @@ export default function DocumentsScreen() {
       )}
     </Screen>
   );
+}
+
+function letterBadge(document: SavedDocument): {
+  label: typeof copy.documents.paid;
+  variant: 'success' | 'info' | 'warning';
+} {
+  if (isPaymentConfirmed(document)) return { label: copy.documents.paid, variant: 'success' };
+  if (document.payment?.status === 'PENDING') return { label: copy.documents.waiting, variant: 'info' };
+  if (document.payment?.status === 'REJECTED') return { label: copy.documents.notConfirmed, variant: 'warning' };
+  return { label: copy.documents.highlight, variant: 'warning' };
 }
 
 function formatDate(iso: string): string {

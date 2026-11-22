@@ -25,6 +25,16 @@ const EnvSchema = z.object({
         .map((email) => email.trim().toLowerCase())
         .filter(Boolean),
     ),
+  // Chapa test or live secret key. Never send this to the app.
+  CHAPA_SECRET_KEY: z.string().min(1).optional(),
+  // Optional. Public key for browser checkout. Safe to expose, unlike the secret key.
+  CHAPA_PUBLIC_KEY: z.string().min(1).optional(),
+  // Optional. Used only if a direct mobile-money charge is added.
+  CHAPA_ENCRYPTION_KEY: z.string().min(1).optional(),
+  // Optional. Used only to check that webhook calls came from Chapa.
+  CHAPA_WEBHOOK_SECRET: z.string().min(1).optional(),
+  CHAPA_CALLBACK_URL: z.string().url().optional(),
+  CHAPA_RETURN_URL: z.string().url().optional(),
 });
 
 export type Env = z.infer<typeof EnvSchema>;

@@ -111,6 +111,45 @@ export const copy = {
     bankStatementHint: ['A recent bank statement.', 'የቅርብ ጊዜ የባንክ መግለጫ።', 'Ibsa baankii dhiyoo.'],
     nationalId: ['National ID', 'ብሔራዊ መታወቂያ', 'Eenyummaa biyyaalessaa'],
     nationalIdHint: ['Identification for the business owner.', 'የንግዱ ባለቤት መታወቂያ።', 'Eenyummaa abbaa daldalaa.'],
+    highlight: ['Highlight', 'ማጠቃለያ', 'Gudunfaa'],
+    paid: ['Payment confirmed', 'ክፍያ ተረጋግጧል', 'Kaffaltiin mirkanaa\'e'],
+    waiting: ['Waiting', 'በመጠባበቅ ላይ', 'Eegaa jira'],
+    notConfirmed: ['Not confirmed', 'አልተረጋገጠም', 'Hin mirkanoofne'],
+    highlightNote: [
+      'This is the draft. Payment downloads this same text. It does not promise loan approval.',
+      'ይህ ረቂቁ ነው። ክፍያ ይህንኑ ጽሑፍ ያወርዳል። ብድር እንደሚሰጥ አያረጋግጥም።',
+      'Kun qophaa\'aa dha. Kaffaltiin barreeffama kana buusa. Liqii kennamuu hin waada\'u.',
+    ],
+    regenerate: ['Regenerate', 'እንደገና አዘጋጅ', 'Irra deebi\'ii qopheessi'],
+    pay: ['Pay {price} ETB', '{price} ብር ክፈል', '{price} ETB kaffali'],
+    payNote: [
+      'Pay {price} ETB with Chapa. The draft stays locked until Chapa confirms the payment.',
+      'በቻፓ {price} ብር ይክፈሉ። ቻፓ ክፍያውን እስኪያረጋግጥ ረቂቁ ተቆልፎ ይቆያል።',
+      'Chaappaa irratti {price} ETB kaffalaa. Chaappaan mirkaneessutti qophaa\'aan cufamaa tura.',
+    ],
+    chapaTest: [
+      'Test numbers: 0900123456, 0900112233, or 0900881111. Any other number fails. OTP: 12345.',
+      'የሙከራ ቁጥሮች፦ 0900123456፣ 0900112233 ወይም 0900881111። ሌላ ቁጥር አይሳካም። OTP፦ 12345።',
+      'Lakkoofsa qormaataa: 0900123456, 0900112233, yookaan 0900881111. Lakkoofsi biraa hin milkaayu. OTP: 12345.',
+    ],
+    checkPayment: ['Check payment', 'ክፍያ ፈትሽ', 'Kaffaltii ilaali'],
+    waitingNote: [
+      'Waiting for Chapa. The draft stays locked until Chapa confirms this payment.',
+      'ቻፓን በመጠባበቅ ላይ። ቻፓ ክፍያውን እስኪያረጋግጥ ረቂቁ ተቆልፎ ይቆያል።',
+      'Chaappaa eegaa jira. Chaappaan kaffaltii kana mirkaneessutti qophaa\'aan cufamaa tura.',
+    ],
+    rejectedNote: [
+      'Chapa did not confirm this payment. You can try again.',
+      'ቻፓ ይህን ክፍያ አላረጋገጠም። እንደገና መሞከር ይችላሉ።',
+      'Chaappaan kaffaltii kana hin mirkaneessine. Irra deebi\'tee yaaluu dandeessa.',
+    ],
+    confirmedNote: [
+      'Payment confirmed. The draft is downloading. It does not promise loan approval.',
+      'ክፍያ ተረጋግጧል። ረቂቁ እየወረደ ነው። ብድር እንደሚሰጥ አያረጋግጥም።',
+      'Kaffaltiin mirkanaa\'e. Qophaa\'aan bu\'aa jira. Liqii kennamuu hin waada\'u.',
+    ],
+    downloadAgain: ['Download again', 'እንደገና አውርድ', 'Irra deebi\'ii buusi'],
+    cancel: ['Cancel', 'ይቅር', 'Dhiisi'],
   },
   financing: {
     subtitle: [

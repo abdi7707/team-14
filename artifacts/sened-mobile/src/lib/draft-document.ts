@@ -200,6 +200,250 @@ export function withSelectedDisclaimer(
   return found ? next : [...next, { heading, body }];
 }
 
+/**
+ * The draft shown before payment, and the document delivered after payment.
+ * Both are this same reading. Nothing else is added at download.
+ */
+export function documentFromHighlight(
+  sections: { heading: string; body: string }[],
+  language: Language,
+  variant = 0,
+): { heading: string; body: string }[] {
+  return [
+    documentHighlight(sections, language, variant),
+    { heading: COPY[language].disclaimer, body: DISCLAIMER[language] },
+  ];
+}
+
+/**
+ * SENED's own reading of the draft. It reports preparation readiness and open
+ * items. It does not repeat the facts the business already entered.
+ */
+export function documentHighlight(
+  sections: { heading: string; body: string }[],
+  language: Language,
+  variant = 0,
+): { heading: string; body: string } {
+  const facts = letterFacts(sections);
+  const style = Math.abs(variant) % 3;
+  if (facts.length === 0) return { heading: HIGHLIGHT_HEADING[language], body: proseHighlight(language, sections, style) };
+  const missing = facts.filter((fact) => fact.missing).map((fact) => fact.label);
+  const percent = Math.round(((facts.length - missing.length) / facts.length) * 100);
+  return {
+    heading: HIGHLIGHT_HEADING[language],
+    body: readinessHighlight(language, style, percent, missing),
+  };
+}
+
+const HIGHLIGHT_HEADING: Record<Language, string> = {
+  EN: 'SENED highlight',
+  AM: 'የSENED ንባብ',
+  OM: 'Dubbisa SENED',
+};
+
+const HIGHLIGHT_OPENING: Record<Language, [string, string, string]> = {
+  EN: [
+    'SENED read this draft and wrote this highlight. It does not repeat the facts you already entered.',
+    "This highlight is SENED's own reading of the draft. Your entered facts stay out of it.",
+    "SENED prepared a fresh reading of this draft. The highlight is the system's view, not a copy of your passport.",
+  ],
+  AM: [
+    'SENED ይህን ረቂቅ አንብቦ ይህን ማጠቃለያ ጻፈ። እርስዎ ያስገቡትን መረጃ አይደግምም።',
+    'ይህ ማጠቃለያ SENED ስለ ረቂቁ ያለው ንባብ ነው። ያስገቡት መረጃ እዚህ አይገለጽም።',
+    'SENED ስለዚህ ረቂቅ አዲስ ንባብ አዘጋጅቷል። ይህ የስርዓቱ እይታ ነው፣ የፓስፖርትዎ ቅጂ አይደለም።',
+  ],
+  OM: [
+    'SENED qophaa’aa kana dubbisee gudunfaa kana barreesse. Odeeffannoo ati galchite hin irra deebi’u.',
+    'Gudunfaan kun dubbisa SENED qophaa’aa kanaa irratti qopheesse dha. Odeeffannoon ati galchite asitti hin ibsamu.',
+    'SENED dubbisa haaraa qophaa’aa kanaa qopheesse. Kun ilaalcha sirnaa ti, waraabbii paaspoortii keetii miti.',
+  ],
+};
+
+const HIGHLIGHT_CLOSING: Record<Language, string> = {
+  EN: 'The figures behind this reading were entered by the business. They are not verified. This draft does not promise loan approval.',
+  AM: 'የዚህ ንባብ መሠረት የሆኑት አሃዞች በንግዱ የተገቡ ናቸው። አልተረጋገጡም። ይህ ረቂቅ ብድር እንደሚሰጥ አያረጋግጥም።',
+  OM: 'Lakkoofsota dubbisa kanaa duuba jiran daldalaan galche. Hin mirkanoofne. Qophaa’aan kun liqii kennamuu hin waada’u.',
+};
+
+function readinessHighlight(language: Language, style: number, percent: number, missing: string[]): string {
+  const band = percent >= 100 ? 'complete' : percent >= 80 ? 'high' : percent >= 50 ? 'mid' : 'low';
+  const gap =
+    missing.length === 0
+      ? COMPLETE_LINE[language][style]
+      : fillGap(language, style, missing);
+  return [
+    HIGHLIGHT_OPENING[language][style],
+    `${READINESS_LINE[language].replace('{percent}', String(percent))} ${JUDGMENT[language][band][style]}`,
+    gap,
+    HIGHLIGHT_CLOSING[language],
+  ].join('\n\n');
+}
+
+const READINESS_LINE: Record<Language, string> = {
+  EN: 'Preparation readiness for this letter is {percent}%.',
+  AM: 'የዚህ ደብዳቤ የዝግጅት ደረጃ {percent}% ነው።',
+  OM: 'Sadarkaan qophii waraqaa kanaa {percent}% dha.',
+};
+
+const JUDGMENT: Record<Language, Record<'complete' | 'high' | 'mid' | 'low', [string, string, string]>> = {
+  EN: {
+    complete: [
+      'Every fact in this letter is filled in. It can be reviewed as a complete draft.',
+      'Nothing in this letter is still waiting to be confirmed.',
+      'The letter has no open passport facts. It can be reviewed as a complete draft.',
+    ],
+    high: [
+      'A reader can follow the request. The letter is ready to review as a draft.',
+      'The draft holds together. What remains is confirmation, not a new letter.',
+      'The structure is in place. Review the open items before you rely on the full draft.',
+    ],
+    mid: [
+      'The request is understandable, and several facts still need confirmation.',
+      'Part of the letter is ready. The open items would leave a reader with questions.',
+      'The draft can be reviewed, but it is not complete until the open items are filled.',
+    ],
+    low: [
+      'Most of the letter is still open, so the full draft would read as incomplete.',
+      'There is not enough confirmed fact for a reader to rely on this draft yet.',
+      'The draft is only a frame until the open items are filled.',
+    ],
+  },
+  AM: {
+    complete: [
+      'በዚህ ደብዳቤ ውስጥ ሁሉም ነጥቦች ተሞልተዋል። እንደ የተሟላ ረቂቅ ሊገመገም ይችላል።',
+      'አሁንም እንዲረጋገጥ የቀረ ነጥብ የለም።',
+      'የፓስፖርት ነጥብ ክፍት አልቀረም። እንደ የተሟላ ረቂቅ ሊገመገም ይችላል።',
+    ],
+    high: [
+      'አንባቢ ጥያቄውን መከተል ይችላል። ደብዳቤው እንደ ረቂቅ ለግምገማ ዝግጁ ነው።',
+      'ረቂቁ ተሰብስቧል። የቀረው ሥራ ማረጋገጥ ነው፣ አዲስ ደብዳቤ መጻፍ አይደለም።',
+      'አወቃቀሩ ተዘጋጅቷል። ሙሉውን ረቂቅ ከመጠቀምዎ በፊት ክፍት ነጥቦችን ይመልከቱ።',
+    ],
+    mid: [
+      'ጥያቄው ይገባል። አንዳንድ ነጥቦች ግን አሁንም ማረጋገጥ ያስፈልጋቸዋል።',
+      'የደብዳቤው ክፍል ተዘጋጅቷል። ክፍት ነጥቦች አንባቢን ጥያቄ ላይ ይተዋሉ።',
+      'ረቂቁ ሊገመገም ይችላል። ክፍት ነጥቦች እስኪሞሉ ድረስ አልተሟላም።',
+    ],
+    low: [
+      'አብዛኛው ደብዳቤ አሁንም ክፍት ነው። ሙሉው ረቂቅ ያልተሟላ ሆኖ ይነበባል።',
+      'አንባቢ በዚህ ረቂቅ ላይ እንዲተማመን የተረጋገጠ መረጃ በቂ አይደለም።',
+      'ክፍት ነጥቦች እስኪሞሉ ድረስ ረቂቁ መሠረት ብቻ ነው።',
+    ],
+  },
+  OM: {
+    complete: [
+      'Wantootni waraqaa kanaa hundi guutamaniiru. Akka qophaa’aa guutuu ilaalamuu danda’a.',
+      'Wanti ammayyuu mirkaneessuuf hafe hin jiru.',
+      'Wanti paaspoortii banaa hin jiru. Akka qophaa’aa guutuu ilaalamuu danda’a.',
+    ],
+    high: [
+      'Dubbistuun gaafficha hordofuu danda’a. Waraqaan kun akka qophaa’aa ilaalamiif qophaa’eera.',
+      'Qophaa’aan kun walitti qabameera. Kan hafe mirkaneessuu dha, waraqaa haaraa barreessuu miti.',
+      'Caasaaan qophaa’eera. Qophaa’aa guutuu fayyadamuun dura wantoota banaa ilaali.',
+    ],
+    mid: [
+      'Gaaffichi ni hubatama. Wantoonni muraasni ammallee mirkaneessuu barbaadu.',
+      'Kutaan waraqaa qophaa’eera. Wantoonni banaa dubbistuu gaaffii waliin dhiisu.',
+      'Qophaa’aan kun ilaalamuu danda’a. Wantoonni banaa guutanitti hin guutamne.',
+    ],
+    low: [
+      'Irra caalaan waraqaa ammayyuu banaadha. Qophaa’aan guutuun akka hin guutamnetti dubbifama.',
+      'Odeeffannoon mirkanaa’e dubbistuun qophaa’aa kana irratti hirkatuuf gahaa miti.',
+      'Wantoonni banaa guutanitti qophaa’aan kun bu’uura qofa.',
+    ],
+  },
+};
+
+const COMPLETE_LINE: Record<Language, [string, string, string]> = {
+  EN: [
+    'No item in this letter is still marked to be confirmed.',
+    'SENED found no open item in this letter.',
+    'Every item used in this letter has a value.',
+  ],
+  AM: [
+    'በዚህ ደብዳቤ ውስጥ አሁንም እንዲረጋገጥ ምልክት የተደረገ ነጥብ የለም።',
+    'SENED በዚህ ደብዳቤ ክፍት ነጥብ አላገኘም።',
+    'በዚህ ደብዳቤ ውስጥ የተጠቀመው እያንዳንዱ ነጥብ እሴት አለው።',
+  ],
+  OM: [
+    'Wanti waraqaa kana keessatti ammayyuu akka mirkanaa’u mallattaa’e hin jiru.',
+    'SENED waraqaa kana keessaa wanta banaa hin arganne.',
+    'Wanti waraqaa kana keessatti fayyadame hundi gatii qaba.',
+  ],
+};
+
+function fillGap(language: Language, style: number, missing: string[]): string {
+  const shown = missing.slice(0, 6);
+  const extra = missing.length - shown.length;
+  const items = extra > 0 ? [...shown, moreItems(language, extra)] : shown;
+  const list = joinList(language, items);
+  return GAP_LINE[language][style].replace('{items}', list);
+}
+
+function moreItems(language: Language, count: number): string {
+  if (language === 'AM') return `ሌሎች ${count}`;
+  if (language === 'OM') return `${count} kan biraa`;
+  return `${count} more`;
+}
+
+function joinList(language: Language, items: string[]): string {
+  if (items.length <= 1) return items[0] ?? '';
+  const last = items[items.length - 1];
+  const rest = items.slice(0, -1).join(language === 'AM' ? '፣ ' : ', ');
+  const and = language === 'AM' ? ' እና ' : language === 'OM' ? ' fi ' : ' and ';
+  return `${rest}${and}${last}`;
+}
+
+const GAP_LINE: Record<Language, [string, string, string]> = {
+  EN: [
+    'These items are still marked to be confirmed: {items}.',
+    'SENED still needs confirmation for: {items}.',
+    'Open items SENED found: {items}.',
+  ],
+  AM: [
+    'እነዚህ ነጥቦች አሁንም እንዲረጋገጡ ምልክት ተደርገዋል፦ {items}።',
+    'SENED አሁንም ማረጋገጫ የሚፈልገው፦ {items}።',
+    'SENED ያገኛቸው ክፍት ነጥቦች፦ {items}።',
+  ],
+  OM: [
+    'Wantoonni kun ammayyuu akka mirkanaa’an mallattaa’aniiru: {items}.',
+    'SENED ammayyuu mirkaneessa barbaadu: {items}.',
+    'Wantoota banaa SENED arge: {items}.',
+  ],
+};
+
+function proseHighlight(language: Language, sections: { heading: string; body: string }[], style: number): string {
+  const count = sections.filter((section) => !isDisclaimerSection(section)).length;
+  return [HIGHLIGHT_OPENING[language][style], PROSE_LINE[language].replace('{count}', String(count)), HIGHLIGHT_CLOSING[language]].join(
+    '\n\n',
+  );
+}
+
+const PROSE_LINE: Record<Language, string> = {
+  EN: 'The letter has {count} sections besides the disclaimer. This reading is the draft.',
+  AM: 'ከማስታወሻው በተጨማሪ ደብዳቤው {count} ክፍሎች አሉት። ይህ ንባብ ረቂቁ ነው።',
+  OM: 'Hubachiisa malees waraqaan kutaa {count} qaba. Dubbisni kun qophaa’aa dha.',
+};
+
+function letterFacts(sections: { heading: string; body: string }[]): { label: string; value: string; missing: boolean }[] {
+  const seen = new Set<string>();
+  const facts: { label: string; value: string; missing: boolean }[] = [];
+  for (const section of sections) {
+    if (isDisclaimerSection(section)) continue;
+    for (const line of section.body.split('\n')) {
+      const match = /^([^:\n]{1,80}):\s*(.*)$/.exec(line.trim());
+      if (!match) continue;
+      const label = match[1].trim();
+      if (!label || seen.has(label)) continue;
+      seen.add(label);
+      const value = match[2].trim();
+      const missing = value.length === 0 || value === MISSING;
+      facts.push({ label, value, missing });
+    }
+  }
+  return facts;
+}
+
 function isDisclaimerSection(section: { heading: string; body: string }): boolean {
   if (DISCLAIMER_HEADINGS.has(section.heading.trim())) return true;
   const included = Object.values(DISCLAIMER).filter((text) => section.body.includes(text));

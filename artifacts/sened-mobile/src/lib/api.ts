@@ -61,6 +61,84 @@ export async function me(): Promise<User> {
   return parseMe(payload);
 }
 
+export type ChapaCheckout = {
+  txRef: string;
+  checkoutUrl: string;
+};
+
+export type ChapaPaymentStatus = 'PENDING' | 'CONFIRMED' | 'REJECTED';
+
+/** Starts a 149 ETB Chapa checkout. The server sets the price and holds the secret key. */
+export async function startChapaCheckout(body: {
+  documentId: string;
+  email: string;
+  fullName: string;
+  phone: string | null;
+  appReturnUrl: string;
+  draftHtml: string;
+  filename: string;
+}): Promise<ChapaCheckout> {
+  const payload = await chapaRequest('/api/payments/chapa/initialize', {
+    documentId: body.documentId,
+    email: body.email,
+    fullName: body.fullName,
+    appReturnUrl: body.appReturnUrl,
+    draftHtml: body.draftHtml,
+    filename: body.filename,
+    ...(body.phone ? { phone: body.phone } : {}),
+  });
+  return parseChapaCheckout(payload);
+}
+
+/** Asks the server to verify this checkout with Chapa. The phone cannot confirm it. */
+export async function checkChapaPayment(txRef: string): Promise<{ txRef: string; status: ChapaPaymentStatus }> {
+  const payload = await chapaRequest('/api/payments/chapa/verify', { txRef });
+  return parseChapaStatus(payload);
+}
+
+function chapaOrigin(): string | null {
+  const raw = process.env.EXPO_PUBLIC_CHAPA_URL?.trim() || process.env.EXPO_PUBLIC_DOMAIN?.trim();
+  if (!raw) return null;
+  const withProtocol = /^https?:\/\//i.test(raw) ? raw : `http://${raw}`;
+  return withProtocol.replace(/\/+$/, '').replace(/\/api$/i, '');
+}
+
+async function chapaRequest(path: string, body: unknown): Promise<unknown> {
+  const origin = chapaOrigin();
+  if (!origin) throw new ApiError(0, 'Chapa payment needs the SENED API.');
+  const headers: Record<string, string> = { Accept: 'application/json', 'Content-Type': 'application/json' };
+  if (currentToken) headers.Authorization = `Bearer ${currentToken}`;
+  let response: Response;
+  try {
+    response = await fetch(`${origin}${path}`, { method: 'POST', headers, body: JSON.stringify(body) });
+  } catch {
+    throw new ApiError(0, 'Could not reach the SENED API. Check your connection and try again.');
+  }
+  const text = await response.text();
+  const payload = text ? parseJson(text) : null;
+  if (!response.ok) throw new ApiError(response.status, messageFromPayload(payload, response.status));
+  return payload;
+}
+
+function parseChapaCheckout(payload: unknown): ChapaCheckout {
+  if (!payload || typeof payload !== 'object') throw new ApiError(500, 'Chapa did not return a checkout.');
+  const body = payload as Record<string, unknown>;
+  if (typeof body.txRef !== 'string' || typeof body.checkoutUrl !== 'string' || !body.checkoutUrl.startsWith('https://')) {
+    throw new ApiError(500, 'Chapa did not return a checkout.');
+  }
+  return { txRef: body.txRef, checkoutUrl: body.checkoutUrl };
+}
+
+function parseChapaStatus(payload: unknown): { txRef: string; status: ChapaPaymentStatus } {
+  if (!payload || typeof payload !== 'object') throw new ApiError(500, 'Chapa did not return a payment status.');
+  const body = payload as Record<string, unknown>;
+  const status = body.status;
+  if (typeof body.txRef !== 'string' || (status !== 'PENDING' && status !== 'CONFIRMED' && status !== 'REJECTED')) {
+    throw new ApiError(500, 'Chapa did not return a payment status.');
+  }
+  return { txRef: body.txRef, status };
+}
+
 export async function generateDocument(body: GenerateDocumentBody): Promise<SavedDocument> {
   const createdAt = new Date().toISOString();
   if (isMockApi()) {
